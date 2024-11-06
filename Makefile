@@ -36,13 +36,8 @@ $(NAME)$(REVISION).zip:	hbmenu.zip boot.firm
 	@zip $@ boot.firm -x "*.DS_Store*" "*__MACOSX*"
 
 boot.firm:	$(SUBFOLDERS)
-	@firmtool build $@ -D sysmodules/sysmodules.bin arm11/arm11.elf arm9/arm9.elf k11_extension/k11_extension.elf \
+	@firmtool build $@ -D arm11/arm11.elf arm9/arm9.elf k11_extension/k11_extension.elf \
 	-A 0x18180000 -C XDMA XDMA NDMA XDMA
 	@echo built... $(notdir $@)
-
-hbmenu.zip:
-	@curl -sSfL $(shell curl -s https://api.github.com/repos/devkitPro/3ds-hbmenu/releases/latest | grep 'browser_' | cut -d\" -f4) -o $@
-	@echo downloaded... $(notdir $@)
-
 $(SUBFOLDERS):
 	@$(MAKE) -C $@ all
