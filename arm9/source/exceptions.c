@@ -169,9 +169,8 @@ void detectAndProcessExceptionDumps(void)
 
     drawString(true, 10, posY + SPACING_Y + SPACING_Y , COLOR_WHITE, "Press any other button to shutdown");
 
-    if(waitInput(false)) goto exit;
-
-exit:
-    memset((void *)dumpHeader, 0, dumpHeader->totalSize);
-    mcuPowerOff();
+    if(waitInput(false)){
+        memset((void *)dumpHeader, 0, dumpHeader->totalSize);
+        mcuPowerOff();
+    }
 }
