@@ -1,6 +1,6 @@
 # SUBFOLDERS	:=	arm11 arm9
 
-.PHONY:	arm11 # all $(SUBFOLDERS)
+.PHONY:	arm9 # all $(SUBFOLDERS)
 
 # all:		boot.firm
 
@@ -10,5 +10,5 @@
 
 # arm11 arm9
 # $(SUBFOLDERS):
-arm11:
+arm9:
 	@$(MAKE) -C $@ all

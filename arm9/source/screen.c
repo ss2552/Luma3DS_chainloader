@@ -60,13 +60,13 @@ static void invokeArm11Function(Arm11Operation op)
     *operation = op;
     while(*operation != ARM11_READY);
 }
-/*
+
 void prepareArm11ForFirmlaunch(void)
 {
     invokeArm11Function(PREPARE_ARM11_FOR_FIRMLAUNCH);
 }
 
-
+/*
 void deinitScreens(void)
 {
     if(ARESCREENSINITIALIZED) invokeArm11Function(DEINIT_SCREENS);
