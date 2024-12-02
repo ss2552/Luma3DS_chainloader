@@ -169,6 +169,16 @@ void error(const char *fmt, ...)
     mcuPowerOff();
 
 }
+
+static inline u8 mcuPeriodMsToTick(u32 periodMs)
+{
+    // 512Hz
+    u32 res = 512u * periodMs / 1000u;
+    res = res < 2 ? 1 : res - 1; // res not allowed to be zero
+    res = res > 255 ? 255 : res; // res can't exceed 255
+    return (u8)res;
+}
+
 void mcuSetInfoLedPattern(u8 r, u8 g, u8 b, u32 periodMs, bool smooth)
 {
     McuInfoLedPattern pattern;

@@ -46,6 +46,7 @@ u32 waitInput(bool isMenu);
 void mcuPowerOff(void);
 void wait(u64 amount);
 void error(const char *fmt, ...);
+u8 mcuPeriodMsToTick(u32 periodMs);
 void mcuSetInfoLedPattern(u8 r, u8 g, u8 b, u32 periodMs, bool smooth);
 
 u16 crc16(const void *data, size_t size, u16 initialValue);
