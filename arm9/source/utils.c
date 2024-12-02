@@ -38,6 +38,17 @@
 #include "memory.h"
 #include "fs.h"
 
+typedef struct McuInfoLedPattern {
+    u8 delay;
+    u8 smoothing;
+    u8 loopDelay;
+    u8 reserved;
+    u8 red[32];
+    u8 green[32];
+    u8 blue[32];
+} McuInfoLedPattern;
+_Static_assert(sizeof(McuInfoLedPattern) == 100, "McuInfoLedPattern: wrong size");
+
 void startChrono(void)
 {
     static bool isChronoStarted = false;
@@ -156,6 +167,42 @@ void error(const char *fmt, ...)
     waitInput(false);
 
     mcuPowerOff();
+
+}
+void mcuSetInfoLedPattern(u8 r, u8 g, u8 b, u32 periodMs, bool smooth)
+{
+    McuInfoLedPattern pattern;
+
+    if (periodMs == 0)
+    {
+        pattern.delay = 0xFF; // as high as we can; needs to be non-zero. Delay between frames (array elems)
+        pattern.smoothing = 1;
+        pattern.loopDelay = 0xFE; // as high as we can
+        for (u32 i = 0; i < 32; i++)
+        {
+            pattern.red[i] = r;
+            pattern.green[i] = g;
+            pattern.blue[i] = b;
+        }
+    }
+    else
+    {
+        periodMs = periodMs < 63 ? 63 : periodMs;
+        pattern.delay = mcuPeriodMsToTick(periodMs);
+        pattern.smoothing = smooth ? mcuPeriodMsToTick(periodMs) : 1;
+        pattern.loopDelay = 0; // restart immediately
+        for (u32 i = 0; i < 16; i++)
+        {
+            pattern.red[2*i] = r;
+            pattern.red[2*i + 1] = 0;
+            pattern.green[2*i] = g;
+            pattern.green[2*i + 1] = 0;
+            pattern.blue[2*i] = b;
+            pattern.blue[2*i + 1] = 0;
+        }
+    }
+
+    I2C_writeRegBuf(I2C_DEV_MCU, 0x2D, (const u8 *)&pattern, sizeof(McuInfoLedPattern));
 }
 
 u16 crc16(const void *data, size_t size, u16 initialValue)

@@ -1,3 +1,3 @@
 # Luma3DS_chainloader
 
-kumaのchainloaderのみ残したfirmwareです。
+lumaのchainloaderのみ残したfirmwareです。

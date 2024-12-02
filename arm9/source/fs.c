@@ -27,15 +27,13 @@
 #include "fs.h"
 #include "memory.h"
 #include "fmt.h"
-#include "crypto.h"
 #include "cache.h"
 #include "screen.h"
 #include "draw.h"
 #include "utils.h"
-#include "fatfs/ff.h"
+#include "fatfs/ff.h" // DIR f_opendir FR_OK FILINFO f_readdir
 #include "buttons.h"
 #include "firm.h"
-#include "crypto.h"
 #include "strings.h"
 #include "alignedseqmemcpy.h"
 #include "i2c.h"
@@ -120,37 +118,8 @@ u32 getFileSize(const char *path)
     return fileRead(NULL, path, 0);
 }
 
-bool fileWrite(const void *buffer, const char *path, u32 size)
-{
-    FIL file;
-    FRESULT result = FR_OK;
 
-    switch(f_open(&file, path, FA_WRITE | FA_OPEN_ALWAYS))
-    {
-        case FR_OK:
-        {
-            unsigned int written;
-            result = f_write(&file, buffer, size, &written);
-            if(result == FR_OK) result = f_truncate(&file);
-            result |= f_close(&file);
-
-            return result == FR_OK && (u32)written == size;
-        }
-        case FR_NO_PATH:
-            for(u32 i = 1; path[i] != 0; i++)
-                if(path[i] == '/')
-                {
-                    char folder[i + 1];
-                    memcpy(folder, path, i);
-                    folder[i] = 0;
-                    result = f_mkdir(folder);
-                }
-
-            return result == FR_OK && fileWrite(buffer, path, size);
-        default:
-            return false;
-    }
-}
+// exceptionを消す bool fileWrite(const void *buffer, const char *path, u32 size)
 
 bool fileDelete(const char *path)
 {
@@ -274,7 +243,7 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
     DIR dir;
 
     *hasDisplayedMenu = false;
-    if(f_opendir(&dir, "payloads") != FR_OK) return false;
+    if(f_opendir(&dir, "ef") != FR_OK) return false;
 
     FILINFO info;
     u32 payloadNum = 0;
@@ -353,7 +322,7 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
 
     if(pressed != BUTTON_START)
     {
-        sprintf(path, "payloads/%s.firm", payloadList[selectedPayload]);
+        sprintf(path, "ef/%s.firm", payloadList[selectedPayload]);
 
         return true;
     }
@@ -362,146 +331,4 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
     wait(2000ULL);
 
     return false;
-}
-
-u32 firmRead(void *dest, u32 firmType)
-{
-    static const char *firmFolders[][2] = {{"00000002", "20000002"},
-                                           {"00000102", "20000102"},
-                                           {"00000202", "20000202"},
-                                           {"00000003", "20000003"},
-                                           {"00000001", "20000001"}};
-
-    char folderPath[64],
-         path[128];
-
-    sprintf(folderPath, "nand:/title/00040138/%s/content", firmFolders[firmType][ISN3DS ? 1 : 0]);
-
-    DIR dir;
-    u32 firmVersion = 0xFFFFFFFF;
-
-    if(f_opendir(&dir, folderPath) != FR_OK) goto exit;
-
-    FILINFO info;
-
-    //Parse the target directory
-    while(f_readdir(&dir, &info) == FR_OK && info.fname[0] != 0)
-    {
-        //Not a cxi
-        if(info.fname[9] != 'a' || strlen(info.fname) != 12) continue;
-
-        u32 tempVersion = hexAtoi(info.altname, 8);
-
-        //Found an older cxi
-        if(tempVersion < firmVersion) firmVersion = tempVersion;
-    }
-
-    if(f_closedir(&dir) != FR_OK || firmVersion == 0xFFFFFFFF) goto exit;
-
-    //Complete the string with the .app name
-    sprintf(path, "%s/%08lx.app", folderPath, firmVersion);
-
-    if(fileRead(dest, path, 0x400000 + sizeof(Cxi) + 0x200) <= sizeof(Cxi) + 0x400) firmVersion = 0xFFFFFFFF;
-
-exit:
-    return firmVersion;
-}
-
-void findDumpFile(const char *folderPath, char *fileName)
-{
-    DIR dir;
-    FRESULT result;
-
-    for(u32 n = 0; n <= 99999999; n++)
-    {
-        FILINFO info;
-
-        sprintf(fileName, "crash_dump_%08lu.dmp", n);
-        result = f_findfirst(&dir, &info, folderPath, fileName);
-
-        if(result != FR_OK || !info.fname[0]) break;
-    }
-
-    if(result == FR_OK) f_closedir(&dir);
-}
-
-static u8 fileCopyBuffer[0x10000];
-
-static const u8 boot9Sha256[32] = {
-    0x2F, 0x88, 0x74, 0x4F, 0xEE, 0xD7, 0x17, 0x85, 0x63, 0x86, 0x40, 0x0A, 0x44, 0xBB, 0xA4, 0xB9,
-    0xCA, 0x62, 0xE7, 0x6A, 0x32, 0xC7, 0x15, 0xD4, 0xF3, 0x09, 0xC3, 0x99, 0xBF, 0x28, 0x16, 0x6F
-};
-
-static const u8 boot11Sha256[32] = {
-    0x74, 0xDA, 0xAC, 0xE1, 0xF8, 0x06, 0x7B, 0x66, 0xCC, 0x81, 0xFC, 0x30, 0x7A, 0x3F, 0xDB, 0x50,
-    0x9C, 0xBE, 0xDC, 0x32, 0xF9, 0x03, 0xAE, 0xBE, 0x90, 0x61, 0x44, 0xDE, 0xA7, 0xA0, 0x75, 0x12
-};
-
-static bool backupEssentialFiles(void)
-{
-    size_t sz = sizeof(fileCopyBuffer);
-
-    bool ok = true;
-    ok = ok && fileCopy("nand:/ro/sys/HWCAL0.dat", "backups/HWCAL0.dat", false, fileCopyBuffer, sz);
-    ok = ok && fileCopy("nand:/ro/sys/HWCAL1.dat", "backups/HWCAL1.dat", false, fileCopyBuffer, sz);
-
-    ok = ok && fileCopy("nand:/rw/sys/LocalFriendCodeSeed_A", "backups/LocalFriendCodeSeed_A", false, fileCopyBuffer, sz); // often doesn't exist
-    ok = ok && fileCopy("nand:/rw/sys/LocalFriendCodeSeed_B", "backups/LocalFriendCodeSeed_B", false, fileCopyBuffer, sz);
-
-    ok = ok && fileCopy("nand:/rw/sys/SecureInfo_A", "backups/SecureInfo_A", false, fileCopyBuffer, sz);
-    ok = ok && fileCopy("nand:/rw/sys/SecureInfo_B", "backups/SecureInfo_B", false, fileCopyBuffer, sz); // often doesn't exist
-
-    if (!ok) return false;
-
-    alignedseqmemcpy(fileCopyBuffer, (const void *)0x10012000, 0x100);
-    if (getFileSize("backups/otp.bin") != 0x100)
-        ok = ok && fileWrite(fileCopyBuffer, "backups/otp.bin", 0x100);
-
-    if (!ok) return false;
-
-    // On dev boards, but not O3DS IS_DEBUGGER, hwcal is on an EEPROM chip accessed via I2C
-    u8 c = mcuConsoleInfo[0];
-    if (c == 2 || c == 4 || (ISN3DS && c == 5) || c == 6)
-    {
-        I2C_readRegBuf(I2C_DEV_EEPROM, 0, fileCopyBuffer, 0x1000); // Up to two instances of hwcal, with the second one @0x800
-        if (getFileSize("backups/HWCAL_01_EEPROM.dat") != 0x1000)
-            ok = ok && fileWrite(fileCopyBuffer, "backups/HWCAL_01_EEPROM.dat", 0x1000);
-    }
-
-    // B9S bootrom backups
-    u32 hash[32/4];
-    sha(hash, (const void *)0x08080000, 0x10000, SHA_256_MODE);
-    if (memcmp(hash, boot9Sha256, 32) == 0 && getFileSize("backups/boot9.bin") != 0x10000)
-        ok = ok && fileWrite((const void *)0x08080000, "backups/boot9.bin", 0x10000);
-    sha(hash, (const void *)0x08090000, 0x10000, SHA_256_MODE);
-    if (memcmp(hash, boot11Sha256, 32) == 0 && getFileSize("backups/boot11.bin") != 0x10000)
-        ok = ok && fileWrite((const void *)0x08090000, "backups/boot11.bin", 0x10000);
-
-    return ok;
-}
-
-bool doLumaUpgradeProcess(void)
-{
-    bool ok = true, ok2 = true;
-
-    // Ensure CTRNAND is mounted
-    remountCtrNandPartition(false);
-
-    // Try to boot.firm to CTRNAND, when applicable
-#ifndef BUILD_FOR_EXPLOIT_DEV
-    if (isSdMode && memcmp(launchedPathForFatfs, "sdmc:", 5) == 0)
-        ok = fileCopy(launchedPathForFatfs, "nand:/boot.firm", true, fileCopyBuffer, sizeof(fileCopyBuffer));
-#endif
-
-    // Try to backup essential files
-    ok2 = backupEssentialFiles();
-
-    // Clean up some of the old files
-    fileDelete("sdmc:/luma/config.bin");
-    fileDelete("nand:/rw/luma/config.bin");
-
-    createDir("sdmc:/luma/payloads");
-    createDir("nand:/rw/luma/payloads");
-
-    return ok && ok2;
 }

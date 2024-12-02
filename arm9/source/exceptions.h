@@ -29,5 +29,4 @@
 #include "types.h"
 
 void installArm9Handlers(void);
-u32 installArm11Handlers(u32 *exceptionsPage, u32 stackAddress, u32 codeSetOffset, u32 *dAbtHandler, u32 dAbtHandlerMemAddress);
 void detectAndProcessExceptionDumps(void);

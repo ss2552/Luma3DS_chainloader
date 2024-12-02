@@ -1,36 +1,14 @@
-@   This file is part of Luma3DS
-@   Copyright (C) 2016-2020 Aurora Wright, TuxSH
-@
-@   This program is free software: you can redistribute it and/or modify
-@   it under the terms of the GNU General Public License as published by
-@   the Free Software Foundation, either version 3 of the License, or
-@   (at your option) any later version.
-@
-@   This program is distributed in the hope that it will be useful,
-@   but WITHOUT ANY WARRANTY; without even the implied warranty of
-@   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-@   GNU General Public License for more details.
-@
-@   You should have received a copy of the GNU General Public License
-@   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-@
-@   Additional Terms 7.b and 7.c of GPLv3 apply to this file:
-@       * Requiring preservation of specified reasonable legal notices or
-@         author attributions in that material or in the Appropriate Legal
-@         Notices displayed by works containing it.
-@       * Prohibiting misrepresentation of the origin of that material,
-@         or requiring that modified versions of such material be marked in
-@         reasonable ways as different from the original version.
+@ https://documentation-service.arm.com/static/5e8e3ee588295d1e18d3aa82
 
 .section .text.start, "ax", %progbits
 .align 4
 .global _start
 _start:
-    @ Disable interrupts and switch to supervisor mode (also clear flags)
+    @ 割り込みを無効にしてCPUモードをスーパーバイザーモードにする
     msr cpsr_cxsf, #0xD3
 
-    @ Check if r0-r2 are 0 (r0-sp are supposed to be 0), and for regions 0, 5 and 7 of the MPU config
-    @ This is not foolproof but should work well enough
+    @ レジスタは全て0x00でMPU(コプロセッサー)のコンフィグレーション、0, 5, 7領域について
+    @ 確実では無いがしっかり機能するはず、だそうです。
     cmp r0, #0
     cmpeq r1, #0
     cmpeq r2, #0
@@ -49,10 +27,10 @@ _start:
     mov r10, r1
     mov r11, r2
 
-    @ Change the stack pointer
+    @ スタックポインタの変更
     mov sp, #0x08100000
 
-    @ Disable caches / MPU
+    @ MPUとキャッシュを無効化
     mrc p15, 0, r4, c1, c0, 0  @ read control register
     bic r4, #(1<<16)           @ - DTCM disable
     bic r4, #(1<<12)           @ - instruction cache disable
@@ -60,8 +38,8 @@ _start:
     bic r4, #(1<<0)            @ - MPU disable
     mcr p15, 0, r4, c1, c0, 0  @ write control register
 
-    @ Invalidate both caches, discarding any data they may contain,
-    @ then drain the write buffer
+    @ 両方のキャッシュを無効にし値を削除
+    @ そしてバッファーを排出する
     mov r4, #0
     mcr p15, 0, r4, c7, c5, 0
     mcr p15, 0, r4, c7, c6, 0

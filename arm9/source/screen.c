@@ -30,7 +30,6 @@
 */
 
 #include "screen.h"
-#include "config.h"
 #include "memory.h"
 #include "i2c.h"
 #include "utils.h"
@@ -61,16 +60,18 @@ static void invokeArm11Function(Arm11Operation op)
     *operation = op;
     while(*operation != ARM11_READY);
 }
-
+/*
 void prepareArm11ForFirmlaunch(void)
 {
     invokeArm11Function(PREPARE_ARM11_FOR_FIRMLAUNCH);
 }
 
+
 void deinitScreens(void)
 {
     if(ARESCREENSINITIALIZED) invokeArm11Function(DEINIT_SCREENS);
 }
+*/
 
 void updateBrightness(u32 brightnessIndex)
 {
@@ -94,11 +95,13 @@ void clearScreens(bool isAlternate)
 
 void initScreens(void)
 {
+    u32 n = 0;
+
     if(needToSetupScreens)
     {
         if(!ARESCREENSINITIALIZED || bootType == FIRMLAUNCH)
         {
-            *(vu32 *)ARM11_PARAMETERS_ADDRESS = brightness[MULTICONFIG(BRIGHTNESS)];
+            *(vu32 *)ARM11_PARAMETERS_ADDRESS = brightness[n];
             memcpy((void *)(ARM11_PARAMETERS_ADDRESS + 4), fbs, sizeof(fbs));
             invokeArm11Function(INIT_SCREENS);
 
@@ -106,7 +109,7 @@ void initScreens(void)
             I2C_writeReg(I2C_DEV_MCU, 0x22, 0x2A);
             wait(5);
         }
-        else updateBrightness(MULTICONFIG(BRIGHTNESS));
+        else updateBrightness(n);
 
         memcpy((void *)ARM11_PARAMETERS_ADDRESS, fbs, sizeof(fbs));
         invokeArm11Function(SETUP_FRAMEBUFFERS);

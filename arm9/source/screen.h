@@ -66,9 +66,10 @@ typedef enum
 extern struct fb fbs[2];
 
 extern bool needToSetupScreens;
-
+/*
 void prepareArm11ForFirmlaunch(void);
 void deinitScreens(void);
+*/
 void swapFramebuffers(bool isAlternate);
 void updateBrightness(u32 brightnessIndex);
 void clearScreens(bool isAlternate);

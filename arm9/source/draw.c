@@ -36,32 +36,8 @@
 #include "fs.h"
 #include "fmt.h"
 #include "font.h"
-#include "config.h"
 
-bool loadSplash(void)
-{
-    static const char *topSplashFile = "splash.bin",
-                      *bottomSplashFile = "splashbottom.bin";
-
-    bool isTopSplashValid = getFileSize(topSplashFile) == SCREEN_TOP_FBSIZE,
-         isBottomSplashValid = getFileSize(bottomSplashFile) == SCREEN_BOTTOM_FBSIZE;
-
-    //Don't delay boot nor init the screens if no splash images or invalid splash images are on the SD
-    if(!isTopSplashValid && !isBottomSplashValid) return false;
-
-    initScreens();
-
-    if(isTopSplashValid) isTopSplashValid = fileRead(fbs[1].top_left, topSplashFile, SCREEN_TOP_FBSIZE) == SCREEN_TOP_FBSIZE;
-    if(isBottomSplashValid) isBottomSplashValid = fileRead(fbs[1].bottom, bottomSplashFile, SCREEN_BOTTOM_FBSIZE) == SCREEN_BOTTOM_FBSIZE;
-
-    if(!isTopSplashValid && !isBottomSplashValid) return false;
-
-    swapFramebuffers(true);
-
-    wait(configData.splashDurationMsec);
-
-    return true;
-}
+// loadSplash
 
 void drawCharacter(bool isTopScreen, u32 posX, u32 posY, u32 color, char character)
 {
