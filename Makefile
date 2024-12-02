@@ -1,17 +1,14 @@
-ifneq ($(strip $(shell firmtool -v 2>&1 | grep usage)),)
-$(error "firmtoolが無いです")
-endif
+# SUBFOLDERS	:=	arm11 arm9
 
-SUBFOLDERS	:=	arm11 arm9
+.PHONY:	arm11 # all $(SUBFOLDERS)
 
-.PHONY:	all $(SUBFOLDERS)
+# all:		boot.firm
 
-all:		boot.firm
-
-boot.firm:	$(SUBFOLDERS)
-	@firmtool build $@ -D arm11/arm11.elf arm9/arm9.elf -A 0x18180000 -C XDMA XDMA NDMA XDMA
-	@echo built... $(notdir $@)
+# boot.firm:	arm11 # $(SUBFOLDERS)
+#	@firmtool build $@ -D arm11/arm11.elf arm9/arm9.elf -A 0x18180000 -C XDMA XDMA NDMA XDMA
+#	@echo built... $(notdir $@)
 
 # arm11 arm9
-$(SUBFOLDERS):
+# $(SUBFOLDERS):
+arm11:
 	@$(MAKE) -C $@ all
