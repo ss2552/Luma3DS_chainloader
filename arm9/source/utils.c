@@ -36,6 +36,7 @@
 #include "fmt.h"
 #include "memory.h"
 #include "fs.h"
+#include "cache.h"
 
 typedef struct McuInfoLedPattern {
     u8 delay;
