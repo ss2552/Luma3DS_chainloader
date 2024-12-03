@@ -49,11 +49,17 @@
 
 extern u8 __itcm_start__[], __itcm_lma__[], __itcm_bss_start__[], __itcm_end__[];
 
+BootType bootType;
+
 u16 mcuFwVersion;
 u8 mcuConsoleInfo[9];
 
-void main(void)
+void main(int argc, char **argv, u32 magicWord)
 {
+    if((magicWord & 0xFFFF) == 0xBEEF && argc >= 1)bootType = B9S;
+    else if(magicWord == 0xBABE && argc == 2)bootType = FIRMLAUNCH;
+    else error("Launched using an unsupported loader.");
+
     // Set up the additional sections, overwrites argc
     memcpy(__itcm_start__, __itcm_lma__, __itcm_bss_start__ - __itcm_start__);
     memset(__itcm_bss_start__, 0, __itcm_end__ - __itcm_bss_start__);
