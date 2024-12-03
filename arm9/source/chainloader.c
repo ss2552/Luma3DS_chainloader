@@ -26,6 +26,7 @@
 
 #include "chainloader.h"
 #include "screen.h"
+#include "utils.h"
 
 void disableMpuAndJumpToEntrypoints(int argc, char **argv, void *arm11Entry, void *arm9Entry);
 
