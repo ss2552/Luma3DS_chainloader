@@ -76,7 +76,7 @@ void main(int argc, u32 magicWord)
 
 
     // 通知ランプ
-    mcuSetInfoLedPattern(255, 0, 255, 500, false);
+    mcuSetInfoLedPattern(0, 0, 255, 0, false);
    
     installArm9Handlers();
 

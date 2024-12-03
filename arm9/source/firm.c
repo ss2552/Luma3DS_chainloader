@@ -107,6 +107,7 @@ void launchFirm(int argc, char **argv)
 
 void loadHomebrewFirm()
 {
+    mcuSetInfoLedPattern(0, 255, 0, 0, false);
     char path[10 + 255];
     bool hasDisplayedMenu = false;
     
@@ -127,5 +128,6 @@ void loadHomebrewFirm()
     if(!hasDisplayedMenu && wantsScreenInit)
         initScreens(); // Don't init the screens unless we have to, if not already done
 
+    mcuSetInfoLedPattern(255, 0, 255, 0, false);
     launchFirm(wantsScreenInit ? 2 : 1, argv);
 }

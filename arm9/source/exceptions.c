@@ -167,8 +167,9 @@ void detectAndProcessExceptionDumps(void)
             drawFormattedString(false, 10 + 10 * SPACING_X + 3 * i * SPACING_X, posYBottom, COLOR_WHITE, "%02X", *stackDump);
     }
 
-    drawString(true, 10, posY + SPACING_Y + SPACING_Y , COLOR_WHITE, "Press any other button to shutdown");
-
+    drawString(true, 10, posY + SPACING_Y , COLOR_WHITE, "Press any other button to shutdown");
+    drawString(true, 10, posY + SPACING_Y + SPACING_Y + SPACING_Y, COLOR_GREEN, "wappi- halozy nyan!!!");
+    
     if(waitInput(false)){
         memset((void *)dumpHeader, 0, dumpHeader->totalSize);
         mcuPowerOff();

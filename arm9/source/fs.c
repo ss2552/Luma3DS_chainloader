@@ -97,6 +97,7 @@ u32 fileRead(void *dest, const char *path, u32 maxSize)
 
 bool payloadMenu(char *path, bool *hasDisplayedMenu)
 {
+    mcuSetInfoLedPattern(0, 255, 255, 0, false);
     DIR dir;
 
     *hasDisplayedMenu = false;
@@ -187,5 +188,6 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
     while(HID_PAD & MENU_BUTTONS);
     wait(2000ULL);
 
+    mcuSetInfoLedPattern(255, 0, 0, 0, false);
     return false;
 }

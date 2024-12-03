@@ -56,6 +56,7 @@ static void doLaunchFirm(Firm *firm, int argc, char **argv)
 
 void chainloader_main(int argc, char **argv, Firm *firm)
 {
+    mcuSetInfoLedPattern(255, 255, 0, 0, false);
     char *argvPassed[2],
          absPath[24 + 255];
     struct fb fbs[2];
@@ -79,6 +80,6 @@ void chainloader_main(int argc, char **argv, Firm *firm)
 
         argvPassed[1] = (char *)&fbs;
     }
-
+    mcuSetInfoLedPattern(255, 255, 255, 0, false);
     doLaunchFirm(firm, argc, argvPassed);
 }
