@@ -25,9 +25,12 @@
 */
 
 #include "firm.h"
+#include "fs.h"
 #include "exceptions.h"
 #include "screen.h"
 #include "chainloader.h"
+#include "utils.h"
+#include "fmt.h"
 
 static Firm *firm = (Firm *)0x20001000;
 /*
