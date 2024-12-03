@@ -33,7 +33,6 @@
 #include "buttons.h"
 #include "screen.h"
 #include "draw.h"
-#include "cache.h"
 #include "fmt.h"
 #include "memory.h"
 #include "fs.h"

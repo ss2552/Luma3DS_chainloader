@@ -25,7 +25,6 @@
 #include "sdmmc.h"
 #include "delay.h"
 
-static struct mmcdevice handleNAND;
 static struct mmcdevice handleSD;
 
 static inline u16 sdmmc_read16(u16 reg)
@@ -61,12 +60,6 @@ static inline void setckl(u32 data)
     sdmmc_mask16(REG_SDCLKCTL, 0x100, 0);
     sdmmc_mask16(REG_SDCLKCTL, 0x2FF, data & 0x2FF);
     sdmmc_mask16(REG_SDCLKCTL, 0x0, 0x100);
-}
-
-mmcdevice *getMMCDevice(int drive)
-{
-    if(drive == 0) return &handleNAND;
-    return &handleSD;
 }
 
 static int geterror(struct mmcdevice *ctx)
@@ -201,6 +194,7 @@ static void __attribute__((noinline)) sdmmc_send_command(struct mmcdevice *ctx, 
     }
 }
 
+// Luma3DS_chainloader\arm9\source\fatfs\diskio.c\disk_write
 int __attribute__((noinline)) sdmmc_sdcard_writesectors(u32 sector_no, u32 numsectors, const u8 *in)
 {
     if(handleSD.isSDHC == 0) sector_no <<= 9;
@@ -215,6 +209,7 @@ int __attribute__((noinline)) sdmmc_sdcard_writesectors(u32 sector_no, u32 numse
     return geterror(&handleSD);
 }
 
+// Luma3DS_chainloader\arm9\source\fatfs\diskio.c\disk_read
 int __attribute__((noinline)) sdmmc_sdcard_readsectors(u32 sector_no, u32 numsectors, u8 *out)
 {
     if(handleSD.isSDHC == 0) sector_no <<= 9;
@@ -227,36 +222,6 @@ int __attribute__((noinline)) sdmmc_sdcard_readsectors(u32 sector_no, u32 numsec
     handleSD.size = numsectors << 9;
     sdmmc_send_command(&handleSD, 0x33C12, sector_no);
     return geterror(&handleSD);
-}
-
-int __attribute__((noinline)) sdmmc_nand_readsectors(u32 sector_no, u32 numsectors, u8 *out)
-{
-    if(handleNAND.isSDHC == 0) sector_no <<= 9;
-    inittarget(&handleNAND);
-    sdmmc_write16(REG_SDSTOP, 0x100);
-    sdmmc_write16(REG_SDBLKCOUNT32, numsectors);
-    sdmmc_write16(REG_SDBLKLEN32, 0x200);
-    sdmmc_write16(REG_SDBLKCOUNT, numsectors);
-    handleNAND.rData = out;
-    handleNAND.size = numsectors << 9;
-    sdmmc_send_command(&handleNAND, 0x33C12, sector_no);
-    inittarget(&handleSD);
-    return geterror(&handleNAND);
-}
-
-int __attribute__((noinline)) sdmmc_nand_writesectors(u32 sector_no, u32 numsectors, const u8 *in) //experimental
-{
-    if(handleNAND.isSDHC == 0) sector_no <<= 9;
-    inittarget(&handleNAND);
-    sdmmc_write16(REG_SDSTOP, 0x100);
-    sdmmc_write16(REG_SDBLKCOUNT32, numsectors);
-    sdmmc_write16(REG_SDBLKLEN32, 0x200);
-    sdmmc_write16(REG_SDBLKCOUNT, numsectors);
-    handleNAND.tData = in;
-    handleNAND.size = numsectors << 9;
-    sdmmc_send_command(&handleNAND, 0x52C19, sector_no);
-    inittarget(&handleSD);
-    return geterror(&handleNAND);
 }
 
 static u32 calcSDSize(u8 *csd, int type)
@@ -313,68 +278,6 @@ static void InitSD()
     *(vu16 *)0x10006002 &= 0xFFFCu; ////SDPORTSEL
     *(vu16 *)0x10006026 = 512; //SDBLKLEN
     *(vu16 *)0x10006008 = 0; //SDSTOP
-}
-
-static int Nand_Init()
-{
-    //NAND
-    handleNAND.isSDHC = 0;
-    handleNAND.SDOPT = 0;
-    handleNAND.res = 0;
-    handleNAND.initarg = 1;
-    handleNAND.clk = 0x80;
-    handleNAND.devicenumber = 1;
-
-    inittarget(&handleNAND);
-    waitcycles(0xF000);
-
-    sdmmc_send_command(&handleNAND, 0, 0);
-
-    do
-    {
-        do
-        {
-            sdmmc_send_command(&handleNAND, 0x10701, 0x100000);
-        }
-        while(!(handleNAND.error & 1));
-    }
-    while((handleNAND.ret[0] & 0x80000000) == 0);
-
-    sdmmc_send_command(&handleNAND, 0x10602, 0x0);
-    if((handleNAND.error & 0x4)) return -1;
-
-    sdmmc_send_command(&handleNAND, 0x10403, handleNAND.initarg << 0x10);
-    if((handleNAND.error & 0x4)) return -1;
-
-    sdmmc_send_command(&handleNAND, 0x10609, handleNAND.initarg << 0x10);
-    if((handleNAND.error & 0x4)) return -1;
-
-    handleNAND.total_size = calcSDSize((u8*)&handleNAND.ret[0], 0);
-    handleNAND.clk = 1;
-    setckl(1);
-
-    sdmmc_send_command(&handleNAND, 0x10407, handleNAND.initarg << 0x10);
-    if((handleNAND.error & 0x4)) return -1;
-
-    handleNAND.SDOPT = 1;
-
-    sdmmc_send_command(&handleNAND, 0x10506, 0x3B70100);
-    if((handleNAND.error & 0x4)) return -1;
-
-    sdmmc_send_command(&handleNAND, 0x10506, 0x3B90100);
-    if((handleNAND.error & 0x4)) return -1;
-
-    sdmmc_send_command(&handleNAND, 0x1040D, handleNAND.initarg << 0x10);
-    if((handleNAND.error & 0x4)) return -1;
-
-    sdmmc_send_command(&handleNAND, 0x10410, 0x200);
-    if((handleNAND.error & 0x4)) return -1;
-
-    handleNAND.clk |= 0x200;
-
-    inittarget(&handleSD);
-
-    return 0;
 }
 
 static int SD_Init()
@@ -450,33 +353,11 @@ static int SD_Init()
     return 0;
 }
 
-void sdmmc_get_cid(bool isNand, u32 *info)
-{
-    struct mmcdevice *device = isNand ? &handleNAND : &handleSD;
-
-    inittarget(device);
-
-    // use cmd7 to put sd card in standby mode
-    // CMD7
-    sdmmc_send_command(device, 0x10507, 0);
-
-    // get sd card info
-    // use cmd10 to read CID
-    sdmmc_send_command(device, 0x1060A, device->initarg << 0x10);
-
-    for(int i = 0; i < 4; ++i)
-        info[i] = device->ret[i];
-
-    // put sd card back to transfer mode
-    // CMD7
-    sdmmc_send_command(device, 0x10507, device->initarg << 0x10);
-}
-
+// Luma3DS_chainloader\arm9\source\fatfs\diskio.c\disk_initialize
 u32 sdmmc_sdcard_init()
 {
     u32 ret = 0;
-    InitSD();
-    if(Nand_Init() != 0) ret |= 1;
-    if(SD_Init() != 0) ret |= 2;
+    InitSD(); 
+    if(SD_Init() != 0) ret = 2;
     return ret;
 }

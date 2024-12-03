@@ -25,18 +25,12 @@
 */
 
 #include "firm.h"
-#include "utils.h"
-#include "fs.h"
 #include "exceptions.h"
-#include "memory.h"
-#include "cache.h"
-#include "crypto.h"
 #include "screen.h"
-#include "fmt.h"
 #include "chainloader.h"
 
 static Firm *firm = (Firm *)0x20001000;
-
+/*
 static __attribute__((noinline)) bool overlaps(u32 as, u32 ae, u32 bs, u32 be)
 {
     if(as <= bs && bs <= ae)
@@ -101,7 +95,7 @@ static bool checkFirm(u32 firmSize)
 
     return arm9EpFound && (firm->arm11Entry == NULL || arm11EpFound);
 }
-
+*/
 void launchFirm(int argc, char **argv)
 {
     prepareArm11ForFirmlaunch();
@@ -118,7 +112,7 @@ void loadHomebrewFirm()
     u32 maxPayloadSize = (u32)((u8 *)0x27FFE000 - (u8 *)firm);
     u32 payloadSize = fileRead(firm, path, maxPayloadSize);
 
-    if(payloadSize <= 0x200 || !checkFirm(payloadSize)) error("The payload is invalid or corrupted.");
+    if(payloadSize <= 0x200) error("The payload is invalid or corrupted."); // || !checkFirm(payloadSize))
 
     char absPath[24 + 255];
 

@@ -31,7 +31,6 @@
 #define PATTERN(a) a "_*.firm"
 
 bool mountSdCardPartition(bool switchMainDir);
-bool remountCtrNandPartition(bool switchMainDir);
 void unmountPartitions(void);
 
 u32 fileRead(void *dest, const char *path, u32 maxSize);

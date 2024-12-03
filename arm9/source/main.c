@@ -45,10 +45,8 @@
 #include "firm.h" // loadHomebrewFirm
 #include "utils.h" // error mcuSetInfoLedPattern
 #include "exceptions.h" // installArm9Handlers detectAndProcessExceptionDumps
-#include "memory.h"
-extern u8 __itcm_start__[], __itcm_lma__[], __itcm_bss_start__[], __itcm_end__[];
 
-u16 launchedPath[80+1];
+extern u8 __itcm_start__[], __itcm_lma__[], __itcm_bss_start__[], __itcm_end__[];
 
 u16 mcuFwVersion;
 u8 mcuConsoleInfo[9];

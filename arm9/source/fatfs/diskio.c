@@ -10,12 +10,10 @@
 #include "ff.h"			/* Obtains integer types */
 #include "diskio.h"		/* Declarations of disk functions */
 #include "sdmmc/sdmmc.h"
-#include "../crypto.h"
 #include "../i2c.h"
 
 /* Definitions of physical drive number for each drive */
 #define SDCARD        0
-#define CTRNAND       1
 
 /*-----------------------------------------------------------------------*/
 /* Get Drive Status                                                      */
@@ -51,10 +49,6 @@ DSTATUS disk_initialize (
         case SDCARD:
             res = (sdmmcInitResult & 2) == 0 ? 0 : STA_NOINIT;
             break;
-        case CTRNAND:
-            // Always update CTRNAND parameters when remounting
-            res = (sdmmcInitResult & 1) == 0 && ctrNandInit() == 0 ? 0 : STA_NOINIT;
-            break;
         default:
             res = STA_NODISK;
             break;
@@ -82,9 +76,6 @@ DRESULT disk_read (
     {
         case SDCARD:
             res = sdmmc_sdcard_readsectors(sector, count, buff) == 0 ? RES_OK : RES_PARERR;
-            break;
-        case CTRNAND:
-            res = ctrNandRead(sector, count, buff) == 0 ? RES_OK : RES_PARERR;
             break;
         default:
             res = RES_NOTRDY;
@@ -121,9 +112,6 @@ DRESULT disk_write (
                 res = sdmmc_sdcard_writesectors(sector, count, buff) == 0 ? RES_OK : RES_PARERR;
             break;
         }
-        case CTRNAND:
-            res = ctrNandWrite(sector, count, buff) == 0 ? RES_OK : RES_PARERR;
-            break;
         default:
             res = RES_NOTRDY;
             break;

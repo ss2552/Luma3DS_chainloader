@@ -27,23 +27,19 @@
 #include "fs.h"
 #include "memory.h"
 #include "fmt.h"
-#include "cache.h"
 #include "screen.h"
 #include "draw.h"
 #include "utils.h"
 #include "fatfs/ff.h" // DIR f_opendir FR_OK FILINFO f_readdir
 #include "buttons.h"
 #include "firm.h"
-#include "strings.h"
-#include "alignedseqmemcpy.h"
 #include "i2c.h"
 
-static FATFS sdFs,
-             nandFs;
+static FATFS sdFs;
 
-static bool switchToMainDir(bool isSd)
+static bool switchToMainDir()
 {
-    const char *mainDir = isSd ? "/luma" : "/rw/luma";
+    const char *mainDir = "/luma";
 
     switch(f_chdir(mainDir))
     {
@@ -56,7 +52,7 @@ static bool switchToMainDir(bool isSd)
                 error("Failed to create luma directory.");
                 return false;
             }
-            return switchToMainDir(isSd);
+            return switchToMainDir();
         }
         default:
             return false;
@@ -74,25 +70,8 @@ bool mountSdCardPartition(bool switchMainDir)
     return sdInitialized;
 }
 
-bool remountCtrNandPartition(bool switchMainDir)
-{
-    static bool nandInitialized = false;
-    int res = FR_OK;
-
-    if (!nandInitialized)
-    {
-        res = f_mount(&nandFs, "nand:", 1);
-        nandInitialized = res == FR_OK;
-    }
-
-    if (nandInitialized && switchMainDir)
-        return f_chdrive("nand:") == FR_OK && switchToMainDir(false);
-    return nandInitialized;
-}
-
 void unmountPartitions(void)
 {
-    f_unmount("nand:");
     f_unmount("sdmc:");
 }
 
@@ -113,130 +92,8 @@ u32 fileRead(void *dest, const char *path, u32 maxSize)
     return result == FR_OK ? ret : 0;
 }
 
-u32 getFileSize(const char *path)
-{
-    return fileRead(NULL, path, 0);
-}
-
 
 // exceptionを消す bool fileWrite(const void *buffer, const char *path, u32 size)
-
-bool fileDelete(const char *path)
-{
-    return f_unlink(path) == FR_OK;
-}
-
-bool fileCopy(const char *pathSrc, const char *pathDst, bool replace, void *tmpBuffer, size_t bufferSize)
-{
-    FIL fileSrc, fileDst;
-    FRESULT res;
-
-    res = f_open(&fileSrc, pathSrc, FA_READ);
-    if (res != FR_OK)
-        return true; // Succeed if the source file doesn't exist
-
-    size_t szSrc = f_size(&fileSrc), rem = szSrc;
-
-    res = f_open(&fileDst, pathDst, FA_WRITE | (replace ? FA_CREATE_ALWAYS : FA_CREATE_NEW));
-
-    if (res == FR_EXIST)
-    {
-        // We did not fail
-        f_close(&fileSrc);
-        return true;
-    }
-    else if (res == FR_NO_PATH)
-    {
-        const char *c;
-        for (c = pathDst + strlen(pathDst); *c != '/' && c >= pathDst; --c);
-        if (c >= pathDst && c - pathDst <= FF_MAX_LFN && *c != '\0')
-        {
-            char path[FF_MAX_LFN + 1];
-            strncpy(path, pathDst, c - pathDst);
-            path[c - pathDst] = '\0';
-            res = f_mkdir(path);
-        }
-
-        if (res == FR_OK)
-            res = f_open(&fileDst, pathDst, FA_WRITE | (replace ? FA_CREATE_ALWAYS : FA_CREATE_NEW));
-    }
-
-    if (res != FR_OK)
-    {
-        f_close(&fileSrc);
-        return false;
-    }
-
-    while (rem > 0)
-    {
-        size_t sz = rem >= bufferSize ? bufferSize : rem;
-        UINT n = 0;
-
-        res = f_read(&fileSrc, tmpBuffer, sz, &n);
-        if (n != sz)
-            res = FR_INT_ERR; // should not happen
-
-        if (res == FR_OK)
-        {
-            res = f_write(&fileDst, tmpBuffer, sz, &n);
-            if (n != sz)
-                res = FR_DENIED; // disk full
-        }
-
-        if (res != FR_OK)
-        {
-            f_close(&fileSrc);
-            f_close(&fileDst);
-            f_unlink(pathDst); // oops, failed
-            return false;
-        }
-        rem -= sz;
-    }
-
-    f_close(&fileSrc);
-    f_close(&fileDst);
-
-    return true;
-}
-
-bool createDir(const char *path)
-{
-    FRESULT res = f_mkdir(path);
-    return res == FR_OK || res == FR_EXIST;
-}
-
-bool findPayload(char *path, u32 pressed)
-{
-    const char *pattern;
-
-    if(pressed & BUTTON_LEFT) pattern = PATTERN("left");
-    else if(pressed & BUTTON_RIGHT) pattern = PATTERN("right");
-    else if(pressed & BUTTON_UP) pattern = PATTERN("up");
-    else if(pressed & BUTTON_DOWN) pattern = PATTERN("down");
-    else if(pressed & BUTTON_START) pattern = PATTERN("start");
-    else if(pressed & BUTTON_B) pattern = PATTERN("b");
-    else if(pressed & BUTTON_X) pattern = PATTERN("x");
-    else if(pressed & BUTTON_Y) pattern = PATTERN("y");
-    else if(pressed & BUTTON_R1) pattern = PATTERN("r");
-    else if(pressed & BUTTON_A) pattern = PATTERN("a");
-    else pattern = PATTERN("select");
-
-    DIR dir;
-    FILINFO info;
-    FRESULT result;
-
-    result = f_findfirst(&dir, &info, "payloads", pattern);
-
-    if(result != FR_OK) return false;
-
-    f_closedir(&dir);
-
-    if(!info.fname[0]) return false;
-
-    sprintf(path, "payloads/%s", info.fname);
-
-    return true;
-}
 
 bool payloadMenu(char *path, bool *hasDisplayedMenu)
 {
@@ -322,7 +179,7 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
 
     if(pressed != BUTTON_START)
     {
-        sprintf(path, "ef/%s.firm", payloadList[selectedPayload]);
+        sprintf(path, "luma/%s.firm", payloadList[selectedPayload]);
 
         return true;
     }
