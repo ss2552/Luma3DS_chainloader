@@ -54,7 +54,7 @@ BootType bootType;
 u16 mcuFwVersion;
 u8 mcuConsoleInfo[9];
 
-void main(int argc, char **argv, u32 magicWord)
+void main(int argc, u32 magicWord)
 {
     if((magicWord & 0xFFFF) == 0xBEEF && argc >= 1)bootType = B9S;
     else if(magicWord == 0xBABE && argc == 2)bootType = FIRMLAUNCH;

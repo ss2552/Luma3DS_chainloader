@@ -10,7 +10,6 @@ _start:
     @ レジスタは全て0x00でMPU(コプロセッサー)のコンフィグレーション、0, 5, 7領域について
     @ 確実では無いがしっかり機能するはず、だそうです。
     cmp r0, #0
-    cmpeq r1, #0
     cmpeq r2, #0
     ldreq r4, =0x20000035
     mrceq p15, 0, r5, c6, c0, 0
@@ -24,8 +23,7 @@ _start:
     ldreq r2, =0xB002
 
     mov r9, r0
-    mov r10, r1
-    mov r11, r2
+    mov r10, r2
 
     @ スタックポインタの変更
     mov sp, #0x08100000
@@ -97,7 +95,6 @@ _start:
 
     mov r0, r9
     mov r1, r10
-    mov r2, r11
     b main
 .pool
 
