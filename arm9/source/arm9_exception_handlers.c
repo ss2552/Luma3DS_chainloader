@@ -24,9 +24,16 @@
 *         reasonable ways as different from the original version.
 */
 
+#include "exceptions.h"
+#include "fs.h"
+#include "memory.h"
+#include "screen.h"
+#include "draw.h"
+#include "utils.h"
+#include "fmt.h"
+#include "buttons.h"
 #include "arm9_exception_handlers.h"
 #include "i2c.h"
-#include "screen.h"
 
 #define FINAL_BUFFER    0x25000000
 

@@ -59,15 +59,11 @@ static bool switchToMainDir()
     }
 }
 
-bool mountSdCardPartition(bool switchMainDir)
+bool mountSdCardPartition()
 {
-    static bool sdInitialized = false;
-    if (!sdInitialized)
-        sdInitialized = f_mount(&sdFs, "sdmc:", 1) == FR_OK;
-
-    if (sdInitialized && switchMainDir)
-        return f_chdrive("sdmc:") == FR_OK && switchToMainDir(true);
-    return sdInitialized;
+    if(f_mount(&sdFs, "sdmc:", 1) == FR_OK)
+        return f_chdrive("sdmc:") == FR_OK && switchToMainDir();
+    return false;
 }
 
 void unmountPartitions(void)
@@ -92,16 +88,13 @@ u32 fileRead(void *dest, const char *path, u32 maxSize)
     return result == FR_OK ? ret : 0;
 }
 
-
-// exceptionを消す bool fileWrite(const void *buffer, const char *path, u32 size)
-
 bool payloadMenu(char *path, bool *hasDisplayedMenu)
 {
     mcuSetInfoLedPattern(0, 255, 255, 0, false);
     DIR dir;
 
     *hasDisplayedMenu = false;
-    if(f_opendir(&dir, "ef") != FR_OK) return false;
+    if(f_opendir(&dir, "luma") != FR_OK) return false;
 
     FILINFO info;
     u32 payloadNum = 0;

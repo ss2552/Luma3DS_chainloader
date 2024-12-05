@@ -99,17 +99,7 @@ void initScreens(void)
 
     if(needToSetupScreens)
     {
-        if(!ARESCREENSINITIALIZED || bootType == FIRMLAUNCH)
-        {
-            *(vu32 *)ARM11_PARAMETERS_ADDRESS = brightness[n];
-            memcpy((void *)(ARM11_PARAMETERS_ADDRESS + 4), fbs, sizeof(fbs));
-            invokeArm11Function(INIT_SCREENS);
-
-            //Turn on backlight
-            I2C_writeReg(I2C_DEV_MCU, 0x22, 0x2A);
-            wait(5);
-        }
-        else updateBrightness(n);
+        updateBrightness(n);
 
         memcpy((void *)ARM11_PARAMETERS_ADDRESS, fbs, sizeof(fbs));
         invokeArm11Function(SETUP_FRAMEBUFFERS);

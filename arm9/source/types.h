@@ -51,16 +51,6 @@ typedef volatile s64 vs64;
 
 #include "3dsheaders.h"
 
-#define CFG_BOOTENV         (*(vu32 *)0x10010000)
-#define CFG_UNITINFO        (*(vu8  *)0x10010010)
-#define CFG_TWLUNITINFO     (*(vu8  *)0x10010014)
-#define OTP_DEVCONSOLEID    (*(vu64 *)0x10012000)
-#define OTP_TWLCONSOLEID    (*(vu64 *)0x10012100)
-#define CFG11_SOCINFO       (*(vu32 *)0x10140FFC)
-
-#define ISN3DS       (CFG11_SOCINFO & 2)
-#define ISDEVUNIT    (CFG_UNITINFO != 0)
-
 typedef struct
 {
     u32 magic[2];
@@ -76,33 +66,6 @@ typedef struct
     u32 additionalDataSize;
 } ExceptionDumpHeader;
 
-typedef enum FirmwareType
-{
-    NATIVE_FIRM = 0,
-    TWL_FIRM,
-    AGB_FIRM,
-    SAFE_FIRM,
-    SYSUPDATER_FIRM,
-    NATIVE_FIRM1X2X
-} FirmwareType;
-
-typedef enum bootType
-{
-    B9S = 0,
-    B9SNTR,
-    FIRM0,
-    FIRM1,
-    FIRMLAUNCH,
-    NTR
-} BootType;
-
-extern bool isSdMode;
-
-extern BootType bootType;
-
 extern char launchedPathForFatfs[256];
 extern u16 launchedFirmTidLow[8];
 extern u16 launchedPath[80+1];
-
-extern u16 mcuFwVersion;
-extern u8 mcuConsoleInfo[9];

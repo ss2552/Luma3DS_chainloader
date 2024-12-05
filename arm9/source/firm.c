@@ -26,7 +26,6 @@
 
 #include "firm.h"
 #include "fs.h"
-#include "exceptions.h"
 #include "screen.h"
 #include "chainloader.h"
 #include "utils.h"

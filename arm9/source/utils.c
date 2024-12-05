@@ -82,7 +82,7 @@ u32 waitInput(bool isMenu)
     u64 initialValue = 0ULL;
     u32 key,
         oldKey = HID_PAD;
-    bool shouldShellShutdown = bootType != B9SNTR && bootType != NTR;
+    bool shouldShellShutdown = true;
 
     if(isMenu)
     {
@@ -168,33 +168,6 @@ void error(const char *fmt, ...)
 
     mcuPowerOff();
 
-}
-
-
-u16 crc16(const void *data, size_t size, u16 initialValue)
-{
-    static u16 lut[256] = {0};
-    static bool lutInitialized = false;
-
-    if (!lutInitialized)
-    {
-        static const u16 poly = 0xA001;
-        for (u32 i = 0; i < 256; i++)
-        {
-            u16 r = i;
-            for (u32 j = 0; j < 8; j++)
-                r = (r >> 1) ^ ((r & 1) != 0 ? poly : 0);
-            lut[i] = r;
-        }
-        lutInitialized = true;
-    }
-
-    u16 r = initialValue;
-    const u8 *data8 = (const u8 *)data;
-    for (size_t i = 0; i < size; i++)
-        r = (r >> 8) ^ lut[(r ^ data8[i]) & 0xFF];
-
-    return r;
 }
 
 u32 crc32(const void *data, size_t size, u32 initialValue)
