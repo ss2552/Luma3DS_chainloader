@@ -12,16 +12,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install and update packages
-      run: |
-        apt-get -y install python3 python3-pip libarchive13
-        python3 -m pip install --upgrade pip setuptools
-        python3 -m pip install cryptography git+https://github.com/TuxSH/firmtool.git
-
     - name: make
       run: make
 
     - uses: actions/upload-artifact@v4
       with:
         name: out
-        path: boot.firm
+        path: ./
