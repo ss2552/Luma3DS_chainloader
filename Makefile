@@ -1,4 +1,4 @@
-SUBFOLDERS	:=	arm11 arm9
+SUBFOLDERS	:=	arm9 arm11
 
 
 .PHONY:	$(SUBFOLDERS)
