@@ -2,7 +2,6 @@
 #include "i2c.h" // I2C_init
 #include "firm.h" // loadHomebrewFirm
 #include "utils.h" // error mcuSetInfoLedPattern
-#include "exceptions.h" // installArm9Handlers detectAndProcessExceptionDumps
 
 extern u8 __itcm_start__[], __itcm_lma__[], __itcm_bss_start__[], __itcm_end__[];
 
