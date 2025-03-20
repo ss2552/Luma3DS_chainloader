@@ -1,30 +1,36 @@
-@ https://documentation-service.arm.com/static/5e8e3ee588295d1e18d3aa82
+@ https://github.com/SciresM/boot9strap/blob/master/stage2/arm9/source/chainloader.c#L44
 
 .section .text.start, "ax", %progbits
 .align 4
 .global _start
 _start:
+
+    mov r0, #0
+    mov r1, #0
+    mov r2, #0
+
     @ 割り込みを無効にしてCPUモードをスーパーバイザーモードにする
     msr cpsr_cxsf, #0xD3
 
     @ レジスタは全て0x00でMPU(コプロセッサー)のコンフィグレーション、0, 5, 7領域について
     @ 確実では無いがしっかり機能するはず、だそうです。
-    cmp r0, #0
-    cmpeq r2, #0
-    ldreq r4, =0x20000035
-    mrceq p15, 0, r5, c6, c0, 0
-    cmpeq r4, r5
-    mrceq p15, 0, r5, c6, c5, 0
-    ldreq r4, =0x07FF801D
-    cmpeq r4, r5
-    mrceq p15, 0, r5, c6, c7, 0
-    ldreq r4, =0x1FFFE019
-    cmpeq r4, r5
-    ldreq r2, =0xB002
+    @ cmp r0, #0
+    @ cmpeq r1, #0
+    @ cmpeq r2, #0
+    @ ldreq r4, =0x20000035
+    @ mrceq p15, 0, r5, c6, c0, 0
+    @ cmpeq r4, r5
+    @ mrceq p15, 0, r5, c6, c5, 0
+    @ ldreq r4, =0x07FF801D
+    @ cmpeq r4, r5
+    @ mrceq p15, 0, r5, c6, c7, 0
+    @ ldreq r4, =0x1FFFE019
+    @ cmpeq r4, r5
+    @ ldreq r2, =0xB002
 
-    mov r9, r0
-    mov r10, r1
-    mov r11, r2
+    @ mov r9, r0
+    @ mov r10, r1
+    @ mov r11, r2
 
     @ スタックポインタの変更
     mov sp, #0x08100000
@@ -94,9 +100,9 @@ _start:
 
     bl __libc_init_array
 
-    mov r0, r9
-    mov r1, r10
-    mov r2, r11
+    @ mov r0, r9
+    @ mov r1, r10
+    @ mov r2, r11
     
     b main
 .pool

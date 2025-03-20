@@ -1,39 +1,19 @@
-/*
-*   This file is part of Luma3DS
-*   Copyright (C) 2016-2021 Aurora Wright, TuxSH
-*
-*   This program is free software: you can redistribute it and/or modify
-*   it under the terms of the GNU General Public License as published by
-*   the Free Software Foundation, either version 3 of the License, or
-*   (at your option) any later version.
-*
-*   This program is distributed in the hope that it will be useful,
-*   but WITHOUT ANY WARRANTY; without even the implied warranty of
-*   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*   GNU General Public License for more details.
-*
-*   You should have received a copy of the GNU General Public License
-*   along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*
-*   Additional Terms 7.b and 7.c of GPLv3 apply to this file:
-*       * Requiring preservation of specified reasonable legal notices or
-*         author attributions in that material or in the Appropriate Legal
-*         Notices displayed by works containing it.
-*       * Prohibiting misrepresentation of the origin of that material,
-*         or requiring that modified versions of such material be marked in
-*         reasonable ways as different from the original version.
-*/
-
 #include "fs.h"
-#include "memory.h"
+// #include "memory.h"
 #include "fmt.h"
+// #include "crypto.h"
+// #include "cache.h"
 #include "screen.h"
 #include "draw.h"
 #include "utils.h"
-#include "fatfs/ff.h" // DIR f_opendir FR_OK FILINFO f_readdir
+#include "fatfs/ff.h"
 #include "buttons.h"
 #include "firm.h"
+// #include "crypto.h"
+// #include "strings.h"
+// #include "alignedseqmemcpy.h"
 #include "i2c.h"
+
 
 static FATFS sdFs;
 
@@ -66,11 +46,6 @@ bool mountSdCardPartition()
     return false;
 }
 
-void unmountPartitions(void)
-{
-    f_unmount("sdmc:");
-}
-
 u32 fileRead(void *dest, const char *path, u32 maxSize)
 {
     FIL file;
@@ -88,12 +63,11 @@ u32 fileRead(void *dest, const char *path, u32 maxSize)
     return result == FR_OK ? ret : 0;
 }
 
-bool payloadMenu(char *path, bool *hasDisplayedMenu)
+bool payloadMenu(char *path)
 {
     mcuSetInfoLedPattern(0, 255, 255, 0, false);
     DIR dir;
 
-    *hasDisplayedMenu = false;
     if(f_opendir(&dir, "luma") != FR_OK) return false;
 
     FILINFO info;
@@ -125,8 +99,7 @@ bool payloadMenu(char *path, bool *hasDisplayedMenu)
     if(payloadNum != 1)
     {
         initScreens();
-        *hasDisplayedMenu = true;
-
+        
         drawString(true, 10, 10, COLOR_TITLE, "Luma3DS chainloader");
         drawString(true, 10, 10 + SPACING_Y, COLOR_TITLE, "Press A to select, START to quit");
 
